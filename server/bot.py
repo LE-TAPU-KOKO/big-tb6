@@ -79,20 +79,16 @@ async def patched_goc(self, *args, **kwargs):
     return await orig_goc(self, *args, **kwargs)
 getstream.video.async_call.Call.get_or_create = patched_goc
 
-# On Windows, aiortc DTLS cannot complete the handshake with Stream's SFU.
-# On Linux (WSL), DTLS works fine, so skip the bypass.
-import platform
-if platform.system() == "Windows":
-    import getstream.video.rtc.pc
-    async def _patched_wait(self, timeout: float = 15.0):
-        import logging
-        logger = logging.getLogger("bot.pc_patch")
-        logger.warning(
-            f"[PATCH] Bypassing wait_for_connected (state={self.connectionState}, "
-            f"iceState={self.iceConnectionState}, iceGathering={self.iceGatheringState})"
-        )
-        return
-    getstream.video.rtc.pc.PublisherPeerConnection.wait_for_connected = _patched_wait
+import getstream.video.rtc.pc
+async def _patched_wait(self, timeout: float = 15.0):
+    import logging
+    logger = logging.getLogger("bot.pc_patch")
+    logger.warning(
+        f"[PATCH] Bypassing wait_for_connected (state={self.connectionState}, "
+        f"iceState={self.iceConnectionState}, iceGathering={self.iceGatheringState})"
+    )
+    return
+getstream.video.rtc.pc.PublisherPeerConnection.wait_for_connected = _patched_wait
 
 # ---------------------------------------------------------------------------
 # Agent instructions

@@ -19,13 +19,13 @@ BigTB6 provides instant, non-contact preliminary screening at the point of care.
 
 BigTb6 is structured across four layers:
 
-1. **Interaction Layer — Gemini Live**: Handles all real-time voice communication with the user over WebRTC. It is multilingual and uses function calling to invoke the appropriate screening tools based on the conversation context.
+1. **Interaction Layer — Gemini Live & GetStream**: Handles all real-time voice and video communication with the user over WebRTC via GetStream's SFU. It uses the `vision-agents` framework to natively route audio/video frames into Gemini Live, dynamically invoking appropriate screening tools using function calling based on the conversation context.
 
-2. **Orchestration Layer — MedGemma**: Acts as the clinical reasoning core. Once all modality-specific models return their results, MedGemma aggregates the outputs, interprets them in context, and generates a consolidated preliminary diagnostic report with risk indicators and recommendations.
+2. **Orchestration Layer — MedGemma**: Acts as the clinical reasoning core. Once all modality-specific models return their results, MedGemma aggregates the outputs, interprets them in context, and generates a consolidated preliminary diagnostic report.
 
 3. **Specialist Model Layer**: A set of independently fine-tuned models, each responsible for a single screening modality (see table below). They are invoked by the orchestrator as needed.
 
-4. **Output Layer**: The final report is synthesized by MedGemma and delivered back to the user through Gemini Live as a voice response.
+4. **Output Layer**: The final report is synthesized by MedGemma and delivered back to the user through Gemini Live as a voice response via the GetStream connection.
 
 ## Features
 
@@ -77,10 +77,10 @@ All specialist models are containerized and deployed on Google Cloud Run for sca
 
 ## Prerequisites
 
-- Python 3.12+
+- Python 3.12+ (Requires **WSL/Ubuntu** if running on Windows for WebRTC DTLS compatibility)
 - Node.js 18+
 - Google API Key (for Gemini Live)
-- Daily.co API Key (for WebRTC)
+- GetStream API Key & Secret (for WebRTC Infrastructure)
 
 ## Setup
 
@@ -109,31 +109,34 @@ Create a `.env` file in the `server` directory:
 ```bash
 # server/.env
 GOOGLE_API_KEY=your_google_api_key_here
-DAILY_API_KEY=your_daily_api_key_here
+STREAM_API_KEY=your_stream_api_key_here
+STREAM_API_SECRET=your_stream_api_secret_here
 ```
 
 **Getting API Keys:**
 - **Google API Key**: Get from [Google AI Studio](https://aistudio.google.com/app/apikey)
-- **Daily.co API Key**: Get from [Daily.co Dashboard](https://dashboard.daily.co/)
+- **GetStream API Keys**: Get from [Stream Dashboard](https://getstream.io/dashboard/)
 
 ## Running the Application
 
-### Terminal 1 - Bot (WebRTC)
+### For Windows Users (Automated)
 
-```bash
-cd server
-./venv/bin/python bot.py -t webrtc --host localhost --port 7860
+We have provided a unified script that handles backend WSL spawning and frontend starting automatically:
+```powershell
+.\run_locally.ps1
 ```
 
-### Terminal 2 - Backend API (Upload + Room)
+### Manual Startup (Linux/WSL)
 
+#### Terminal 1 - Backend API & Bot Orchestrator
 ```bash
 cd server
-./venv/bin/python main.py
+source ~/med-venv/bin/activate # Use your venv path
+python main.py
 ```
+*(Note: The bot is dynamically spawned by the backend when a user connects from the frontend).*
 
-### Terminal 3 - Frontend
-
+#### Terminal 2 - Frontend
 ```bash
 cd client
 npm run dev
@@ -143,8 +146,8 @@ npm run dev
 
 1. Open http://localhost:3000 in your browser
 2. Grant microphone and camera permissions
-3. Click "Start Consultation"
-4. Use the "Chest X‑ray Upload" panel to upload an X‑ray image when needed
+3. Click "Start Visit"
+4. Wait for the Bot to spawn and natively join the Stream Video call! You can now talk to BigTBAI clearly and seamlessly. Use the provided tools and UI to begin diagnostic checks.
 
 ## How It Works
 
@@ -193,32 +196,29 @@ npm run dev
 
 ```
 GEMINI_LIVE/
-├── client/                 # Next.js frontend
+├── client/                 # Next.js frontend with Stream Video SDK
 │   ├── app/              # Next.js app directory
 │   ├── components/        # React components
 │   └── package.json      # Frontend dependencies
 ├── server/                # Python backend
-│   ├── bot.py            # Main bot with Pipecat
+│   ├── bot.py            # Main bot built with Vision-Agents
 │   ├── tb_audio_tool.py  # TB cough analysis API
 │   ├── palm_anemia_tool.py  # Palm anemia API
 │   ├── eye_anemia_tool.py   # Eye anemia API
 │   ├── nail_anemia_tool.py  # Nail anemia API
 │   ├── chest_xray_tool.py   # Chest X‑ray TB API
 │   ├── xray_store.py     # Latest X‑ray path store
-│   ├── main.py           # FastAPI server (upload + room)
+│   ├── main.py           # FastAPI server (upload + bot spawner)
 │   ├── requirements.txt  # Python dependencies
 │   └── venv/             # Virtual environment
-├── docs/                  # Documentation
-│   └── plans/            # Implementation plans
-└── pipecat/              # Custom Pipecat fork
 ```
 
 ### Customizing the Bot
 
 Edit `server/bot.py` to:
-- Change the system prompt/behavior
-- Add new tools
-- Modify conversation flow
+- Change the `BigTBAI` system prompt/behavior
+- Add new clinical tools to the Gemini Live configuration
+- Modify Stream video connection logic
 
 ## License
 
@@ -226,6 +226,6 @@ MIT License
 
 ## Credits
 
-- [Pipecat](https://pipecat.ai/) - Real-time voice AI framework
+- [Vision-Agents](https://github.com/landing-ai/vision-agents) - Framework for building vision-capable agents
 - [Google Gemini Live API](https://ai.google.dev/gemini-api/docs/live) - Multimodal live AI
-- [Daily.co](https://daily.co/) - WebRTC infrastructure
+- [GetStream Video](https://getstream.io/video/) - Global scalable WebRTC infrastructure

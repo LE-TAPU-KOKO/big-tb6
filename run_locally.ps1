@@ -7,7 +7,7 @@ Write-Host "Opening new windows for Backend and Frontend..."
 $ProjectRoot = Get-Location
 
 # 1. Start Backend API
-$BackendArgs = "-ExecutionPolicy Bypass -NoExit -Command cd '$ProjectRoot\server'; .\.venv\Scripts\Activate.ps1; python main.py"
+$BackendArgs = "-ExecutionPolicy Bypass -NoExit -Command cd '$ProjectRoot\server'; .\.venv\Scripts\python.exe main.py"
 Start-Process powershell -ArgumentList $BackendArgs -WindowStyle Normal
 
 # 2. Start Next.js Frontend
