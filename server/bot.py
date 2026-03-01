@@ -25,6 +25,38 @@ from xray_store import get_latest_xray_path
 load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY", "")
 
+from palm_anemia_tool import analyze_palm_file
+from eye_anemia_tool import analyze_eye_file
+from nail_anemia_tool import analyze_nail_file
+import time
+
+# ---------------------------------------------------------------------------
+# Native Capture Logic & Global State
+# ---------------------------------------------------------------------------
+import time
+
+latest_video_frame = None
+recording_audio = False
+audio_buffer = bytearray()
+
+# 1. Monkey-patch GeminiRealtime to capture the latest VideoFrame
+old_send_video_frame = GeminiRealtime._send_video_frame
+async def new_send_video_frame(self, frame):
+    global latest_video_frame
+    latest_video_frame = frame
+    return await old_send_video_frame(self, frame)
+GeminiRealtime._send_video_frame = new_send_video_frame
+
+# 2. Audio tracking event callback
+from vision_agents.core.edge.events import AudioReceivedEvent
+async def handle_audio(event: AudioReceivedEvent):
+    global recording_audio, audio_buffer
+    if recording_audio and getattr(event, "pcm_data", None):
+        try:
+            audio_buffer.extend(event.pcm_data.to_bytes())
+        except Exception:
+            pass
+
 # ---------------------------------------------------------------------------
 # Tool Definitions
 # ---------------------------------------------------------------------------
@@ -44,28 +76,70 @@ async def analyze_chest_xray() -> str:
         return json.dumps({"error": str(e)})
 
 async def analyze_uploaded_cough() -> str:
-    """Analyzes the most recently uploaded cough audio for TB indicators."""
-    return json.dumps({
-        "status": "Cough analysis not fully ported yet. Please advise the user to rely on Gemini's native audio listening capabilities for the hackathon."
-    })
+    """Invokes the TB cough analysis endpoint."""
+    global recording_audio, audio_buffer
+    print("Recording audio for 5 seconds...")
+    audio_buffer = bytearray()
+    recording_audio = True
+    await asyncio.sleep(5.0)
+    recording_audio = False
+    print("Stopped recording audio.")
+    
+    if len(audio_buffer) == 0:
+        return json.dumps({"error": "No audio was collected."})
+        
+    path = f"/tmp/cough_{int(time.time())}.wav"
+    try:
+        save_audio_to_wav(bytes(audio_buffer), 48000, path)
+        res = await analyze_cough_file(path)
+        return json.dumps({"status": "Success. Present this predicted score to the user.", "tb_prediction": res})
+    except Exception as e:
+        return json.dumps({"error": str(e)})
 
 async def analyze_uploaded_palm() -> str:
-    """Analyzes the most recently uploaded palm image for Anemia indicators."""
-    return json.dumps({
-        "status": "Palm analysis uploaded file processing not fully ported yet. Please ask the user to use the UI."
-    })
+    """Invokes the Palm Anemia endpoint."""
+    global latest_video_frame
+    if latest_video_frame is None:
+        return json.dumps({"error": "No video frame available. Please ask user to turn on their camera."})
+        
+    path = f"/tmp/palm_{int(time.time())}.jpg"
+    try:
+        img = latest_video_frame.to_image()
+        img.save(path)
+        res = await analyze_palm_file(path)
+        return json.dumps({"status": "Success. Present this predicted score to the user.", "anemia_prediction": res})
+    except Exception as e:
+        return json.dumps({"error": str(e)})
 
 async def analyze_uploaded_eye() -> str:
-    """Analyzes the most recently uploaded eye image for Anemia indicators."""
-    return json.dumps({
-        "status": "Eye analysis uploaded file processing not fully ported yet. Please ask the user to use the UI."
-    })
+    """Invokes the Eye Anemia endpoint."""
+    global latest_video_frame
+    if latest_video_frame is None:
+        return json.dumps({"error": "No video frame available. Please ask user to turn on their camera."})
+        
+    path = f"/tmp/eye_{int(time.time())}.jpg"
+    try:
+        img = latest_video_frame.to_image()
+        img.save(path)
+        res = await analyze_eye_file(path)
+        return json.dumps({"status": "Success. Present this predicted score to the user.", "anemia_prediction": res})
+    except Exception as e:
+        return json.dumps({"error": str(e)})
 
 async def analyze_uploaded_nail() -> str:
-    """Analyzes the most recently uploaded nail image for Anemia indicators."""
-    return json.dumps({
-        "status": "Nail analysis uploaded file processing not fully ported yet. Please ask the user to use the UI."
-    })
+    """Invokes the Nail Anemia endpoint."""
+    global latest_video_frame
+    if latest_video_frame is None:
+        return json.dumps({"error": "No video frame available. Please ask user to turn on their camera."})
+        
+    path = f"/tmp/nail_{int(time.time())}.jpg"
+    try:
+        img = latest_video_frame.to_image()
+        img.save(path)
+        res = await analyze_nail_file(path)
+        return json.dumps({"status": "Success. Present this predicted score to the user.", "anemia_prediction": res})
+    except Exception as e:
+        return json.dumps({"error": str(e)})
 
 # ---------------------------------------------------------------------------
 # Monkey patches for Stream server-side auth
@@ -96,20 +170,27 @@ getstream.video.rtc.pc.PublisherPeerConnection.wait_for_connected = _patched_wai
 
 INSTRUCTIONS = """You are BigTBAI, a friendly and professional health companion for the Gemini Live Medical Diagnostics platform.
 
-Your main goal is to have a natural, empathetic conversation about the user's health concerns and guide them toward appropriate care. This is a comprehensive screening platform that analyzes multiple health indicators—including cough sounds for TB assessment and eye/palm/nail images for anemia detection—providing a thorough health evaluation experience.
+Your main goal is to have a natural, empathetic conversation about the user's health concerns and guide them toward appropriate care. The platform is a comprehensive screening platform that analyzes multiple health indicators—including cough sounds for TB assessment, eye/palm/nail images for anemia detection, and chest X-rays.
 
-CONVERSATION STYLE:
-- Be warm, friendly, and conversational
-- Keep responses concise and easy to understand
+CONVERSATION STYLE & FLOW:
+1. Greet the user warmly and interview them about their symptoms (especially TB "B-side" symptoms like fever, weight loss, night sweats, etc.).
+2. Do not barrage the user with commands. Guide them step-by-step through the required diagnostic checks.
+3. Be warm, concise, and easy to understand.
 
-TOOL RULES:
-- When the user confirms X-ray upload, call analyze_chest_xray immediately.
-- For all other checks (Cough, Eye, Palm, Nail), you can use your **native Gemini audio and vision capabilities** to provide a rough preliminary estimate, but advise the user that the specialized Cloud Run models require them to use the explicit Upload buttons in the UI for clinical-grade analysis.
-- Give me a few seconds to run this through our specialist models when you execute a tool.
+AUTOMATED CAPTURES & TOOL RULES:
+IMPORTANT: You must NOT ask the user to upload anything EXCEPT the Chest X-ray. For all other modalities, you must "automatically capture" the inputs natively.
 
-IMPORTANT:
-- You are NOT a doctor—always recommend professional medical consultation
-- Explain that all analyses use AI technology and have limitations—professional medical diagnosis is essential
+- EYE, PALM, AND NAIL (Anemia): Instruct the user to position their eye, palm, or fingernail clearly in front of the camera. Once they are in position, execute the corresponding tool (e.g. analyze_eye). The tool will automatically capture the video frame and send it to the specialized clinical endpoint. The tool will return the actual endpoint's estimation score and finding, which you will then verbally present to the user.
+- COUGH (TB): Ask the user to cough into the microphone. Once they cough, execute the analyze_cough tool. It will automatically record the audio buffer for a few seconds, process it through the endpoint, and return the true endpoint TB risk score. Present this score to the user.
+- CHEST X-RAY: This is the ONLY input the user must explicitly upload. Ask them to upload it via the UI dashboard. When they confirm the upload, execute the `analyze_chest_xray` tool immediately. Wait a few seconds for the result.
+
+FINAL REPORTING (MedGemma):
+Once all the tests (Interview, Cough, Eye/Palm/Nail, and Chest X-ray) are completed, tell the user that you are "sending all findings to MedGemma for the final evaluation". 
+Then, conclude the conversation by generating a short, cohesive summary of the final report, synthesizing all the probabilities, scores, and interview findings, and advising them on their next clinical steps.
+
+IMPORTANT LIMITATIONS:
+- You are not a human doctor—always strongly recommend professional medical consultation.
+- Explain that all analyses use AI technology and have limitations.
 """
 
 # ---------------------------------------------------------------------------
@@ -126,12 +207,15 @@ def create_agent() -> Agent:
         llm=llm
     )
     
+    # Attach audio tracker
+    agent.events.on(AudioReceivedEvent, handle_audio)
+    
     # Register tools directly on the LLM
-    llm.register_function(name="analyze_chest_xray", description="Analyzes the most recently uploaded chest X-ray image for TB indicators.")(analyze_chest_xray)
-    llm.register_function(name="analyze_uploaded_cough", description="Analyzes the most recently uploaded cough audio for TB indicators.")(analyze_uploaded_cough)
-    llm.register_function(name="analyze_uploaded_palm", description="Analyzes the most recently uploaded palm image for Anemia indicators.")(analyze_uploaded_palm)
-    llm.register_function(name="analyze_uploaded_eye", description="Analyzes the most recently uploaded eye image for Anemia indicators.")(analyze_uploaded_eye)
-    llm.register_function(name="analyze_uploaded_nail", description="Analyzes the most recently uploaded nail image for Anemia indicators.")(analyze_uploaded_nail)
+    llm.register_function(name="analyze_chest_xray", description="Analyzes the most recently uploaded chest X-ray image for TB indicators. THIS IS THE ONLY TOOL THAT USES AN UPLOAD.")(analyze_chest_xray)
+    llm.register_function(name="analyze_cough", description="Triggers the TB cough analysis endpoint using the native audio stream you are hearing.")(analyze_uploaded_cough)
+    llm.register_function(name="analyze_palm", description="Triggers the Palm anemia endpoint using the native video stream you are seeing.")(analyze_uploaded_palm)
+    llm.register_function(name="analyze_eye", description="Triggers the Eye anemia endpoint using the native video stream you are seeing.")(analyze_uploaded_eye)
+    llm.register_function(name="analyze_nail", description="Triggers the Nail anemia endpoint using the native video stream you are seeing.")(analyze_uploaded_nail)
     
     return agent
 
