@@ -1,0 +1,47 @@
+# Gcloud ignore file. Patterns are relative to this directory (server/).
+
+# Python caches/builds
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+/tmp/
+
+# Git
+.git/
+.gitignore
+
+# Media outputs
+cough_samples/
+eye_images/
+palm_captures/
+fingernail_images/
+xray_images/
+medgemma_reports/
+medgemma/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+backend_live.pid
+frontend_live.pid

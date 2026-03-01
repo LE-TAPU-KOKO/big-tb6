@@ -1,0 +1,183 @@
+{
+  "result": {
+    "report_id": "TB-20260224-134442-9848",
+    "timestamp": "2026-02-24T13:44:42.064615",
+    "schema_version": "1.0.0",
+    "who_guideline_reference": "WHO/2022/TB/1.1",
+    "input_image": "xray_1771938976_Image_007.png",
+    "patient_id": null,
+    "examination_date": "2026-02-24T13:44:42.064624",
+    "model_info": {
+      "vision_model": "MedSigLIP-v4",
+      "vision_model_version": "4.0.0",
+      "classifier": "LinearProbe",
+      "classifier_version": "4.0.0",
+      "calibration_method": "PlattScaling",
+      "calibration_active": true,
+      "calibration_date": null,
+      "llm_reasoning": "MedGemma-4B-IT-Q6K",
+      "llm_version": "1.5.0"
+    },
+    "who_triage": {
+      "priority_code": "P1-RED",
+      "priority_score": 95,
+      "category": "Immediate action required - High probability active TB"
+    },
+    "classification": {
+      "result": "TB Positive — High Probability ⚠️ (Low Spatial Confidence)",
+      "severity": "HIGH",
+      "raw_probability": 0.9815,
+      "calibrated_probability": 0.9298,
+      "risk_stratification": "High Risk"
+    },
+    "anatomical_analysis": {
+      "primary_zone": "Right Upper Lobe (RUL)",
+      "zones": [
+        {
+          "zone_name": "Right Upper Lobe (RUL)",
+          "lobe": "right_upper",
+          "l2_norm_score": 2.54,
+          "normalized_score": 0.0254,
+          "anatomical_prior_weight": 1.1,
+          "confidence_contribution": 0.4961,
+          "is_primary": true
+        },
+        {
+          "zone_name": "Left Upper Lobe (LUL)",
+          "lobe": "left_upper",
+          "l2_norm_score": 1.59,
+          "normalized_score": 0.0159,
+          "anatomical_prior_weight": 1.1,
+          "confidence_contribution": 0.3105,
+          "is_primary": false
+        },
+        {
+          "zone_name": "Right Lower Lobe (RLL)",
+          "lobe": "right_lower",
+          "l2_norm_score": 0.49,
+          "normalized_score": 0.0049,
+          "anatomical_prior_weight": 0.85,
+          "confidence_contribution": 0.0957,
+          "is_primary": false
+        },
+        {
+          "zone_name": "Left Lower Lobe (LLL)",
+          "lobe": "left_lower",
+          "l2_norm_score": 0.5,
+          "normalized_score": 0.005,
+          "anatomical_prior_weight": 0.85,
+          "confidence_contribution": 0.0977,
+          "is_primary": false
+        }
+      ],
+      "is_salient": true,
+      "saliency_threshold": 2.0,
+      "spatial_distribution": "diffuse"
+    },
+    "findings": {
+      "summary": "Saliency-detected opacity in Right Upper Lobe (RUL)",
+      "detailed": [
+        {
+          "finding_type": "opacity",
+          "location": "Right Upper Lobe (RUL)",
+          "severity_score": 0.9298,
+          "size_mm": null,
+          "description": "Saliency-detected opacity in Right Upper Lobe (RUL) with L2-norm activation pattern",
+          "visual_evidence": true,
+          "ai_detected": true,
+          "cross_modal_verified": false,
+          "uncertainty_level": "high"
+        }
+      ],
+      "total_findings": 1
+    },
+    "cross_modal_verification": {
+      "vision_json_consistent": true,
+      "heatmap_correlates_with_json": true,
+      "visual_findings_match_zones": null,
+      "verification_passed": null,
+      "discrepancies": [],
+      "verification_confidence": null
+    },
+    "differential_diagnosis": {
+      "primary_hypothesis": "Active Pulmonary Tuberculosis",
+      "ranked_list": [
+        {
+          "diagnosis": "Active Pulmonary Tuberculosis",
+          "probability": 0.9298,
+          "rank": 1
+        },
+        {
+          "diagnosis": "Bacterial Pneumonia",
+          "probability": 0.12,
+          "rank": 2
+        },
+        {
+          "diagnosis": "Lung Abscess",
+          "probability": 0.05,
+          "rank": 3
+        },
+        {
+          "diagnosis": "Necrotizing Pneumonia",
+          "probability": 0.03,
+          "rank": 4
+        }
+      ]
+    },
+    "uncertainty": {
+      "epistemic_uncertainty": 0.8398,
+      "aleatoric_uncertainty": 0.05,
+      "total_uncertainty": 0.8898,
+      "confidence_interval_95": [
+        0.7798,
+        1.0
+      ],
+      "prediction_stability": 0.95,
+      "spatial_entropy": 0.8398
+    },
+    "quality_metrics": {
+      "image_resolution": [
+        448,
+        448
+      ],
+      "preprocessing_applied": [
+        "CLAHE",
+        "Z-Score_Normalization",
+        "Resize_448x448"
+      ],
+      "tta_views_used": 8,
+      "image_quality_score": 0.95,
+      "analysis_confidence": "Low (Ambiguous)"
+    },
+    "clinical_recommendations": {
+      "immediate_actions": [
+        "URGENT: Immediate physician review required",
+        "Implement airborne precautions if respiratory symptoms present",
+        "Consider isolation pending confirmatory testing",
+        "Initiate contact tracing if confirmed active TB"
+      ],
+      "follow_up_tests": [
+        "Sputum AFB smear (minimum 3 samples, morning preferred)",
+        "Mycobacterial culture with drug susceptibility testing",
+        "Nucleic acid amplification test (NAAT/Xpert MTB/RIF)",
+        "HIV testing (WHO recommendation for all TB suspects)",
+        "Chest CT if inconclusive or complex presentation"
+      ],
+      "timeframe": "Within 24 hours",
+      "referral_required": true,
+      "isolation_required": true
+    },
+    "thresholds_applied": {
+      "normal_cutoff": 0.15,
+      "high_cutoff": 0.45,
+      "triage_cutoff": 0.19
+    },
+    "processing_metadata": {
+      "total_processing_time_ms": 114384,
+      "phase1_time_ms": 114384,
+      "phase2_time_ms": 0,
+      "device_used": "cpu",
+      "precision": "float32"
+    }
+  }
+}

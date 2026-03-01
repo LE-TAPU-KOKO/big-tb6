@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+/tmp/
+
+# Git
+.git/
+.gitignore
+
+# Sample data (will be created in container)
+cough_samples/*.wav
+cough_samples/*.json
+eye_images/*.png
+eye_images/*.jpg
+eye_images/*.json
+palm_captures/*.png
+palm_captures/*.jpg
+palm_captures/*.json
+fingernail_images/*.png
+fingernail_images/*.json
+xray_images/*
+medgemma_reports/*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+backend_live.pid
+frontend_live.pid

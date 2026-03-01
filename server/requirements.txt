@@ -1,0 +1,10 @@
+python-dotenv
+fastapi
+uvicorn[standard]
+vision-agents[getstream,gemini]
+aiohttp
+requests
+python-multipart
+Pillow
+numpy
+scipy

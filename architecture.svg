@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" width="900" height="620" font-family="'Segoe UI', system-ui, sans-serif">
+  <!-- Background -->
+  <rect width="900" height="620" fill="#0d1117" rx="12"/>
+
+  <!-- Title -->
+  <text x="450" y="38" text-anchor="middle" font-size="18" font-weight="700" fill="#e6edf3" letter-spacing="1">BigTB6 — System Architecture</text>
+
+  <!-- ─── USER LAYER ─── -->
+  <rect x="30" y="60" width="840" height="70" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="450" y="82" text-anchor="middle" font-size="10" fill="#8b949e" letter-spacing="2" font-weight="600">USER INPUT LAYER</text>
+
+  <!-- User inputs -->
+  <rect x="50"  y="90" width="100" height="28" rx="5" fill="#1f3a5f" stroke="#388bfd" stroke-width="1"/>
+  <text x="100" y="108" text-anchor="middle" font-size="11" fill="#79c0ff">Microphone</text>
+
+  <rect x="168" y="90" width="100" height="28" rx="5" fill="#1f3a5f" stroke="#388bfd" stroke-width="1"/>
+  <text x="218" y="108" text-anchor="middle" font-size="11" fill="#79c0ff">Cough Audio</text>
+
+  <rect x="286" y="90" width="100" height="28" rx="5" fill="#1f3a5f" stroke="#388bfd" stroke-width="1"/>
+  <text x="336" y="108" text-anchor="middle" font-size="11" fill="#79c0ff">Chest X-ray</text>
+
+  <rect x="404" y="90" width="100" height="28" rx="5" fill="#1f3a5f" stroke="#388bfd" stroke-width="1"/>
+  <text x="454" y="108" text-anchor="middle" font-size="11" fill="#79c0ff">Palm Image</text>
+
+  <rect x="522" y="90" width="100" height="28" rx="5" fill="#1f3a5f" stroke="#388bfd" stroke-width="1"/>
+  <text x="572" y="108" text-anchor="middle" font-size="11" fill="#79c0ff">Eye Image</text>
+
+  <rect x="640" y="90" width="100" height="28" rx="5" fill="#1f3a5f" stroke="#388bfd" stroke-width="1"/>
+  <text x="690" y="108" text-anchor="middle" font-size="11" fill="#79c0ff">Fingernail</text>
+
+  <rect x="758" y="90" width="100" height="28" rx="5" fill="#1f3a5f" stroke="#388bfd" stroke-width="1"/>
+  <text x="808" y="108" text-anchor="middle" font-size="11" fill="#79c0ff">Webcam Feed</text>
+
+  <!-- Arrow down from user layer -->
+  <line x1="450" y1="130" x2="450" y2="160" stroke="#30363d" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="450,163 445,154 455,154" fill="#30363d"/>
+
+  <!-- ─── GEMINI LIVE ─── -->
+  <rect x="200" y="163" width="500" height="60" rx="8" fill="#1a2a1a" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="450" y="185" text-anchor="middle" font-size="10" fill="#3fb950" letter-spacing="2" font-weight="600">INTERACTION LAYER</text>
+  <text x="450" y="204" text-anchor="middle" font-size="13" font-weight="700" fill="#56d364">Gemini Live</text>
+  <text x="450" y="218" text-anchor="middle" font-size="10" fill="#8b949e">WebRTC · Real-time Voice · Multilingual · Function Calling</text>
+
+  <!-- Arrows down from Gemini Live to orchestrator -->
+  <line x1="450" y1="223" x2="450" y2="255" stroke="#3fb950" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="450,258 445,249 455,249" fill="#3fb950"/>
+
+  <!-- ─── MEDGEMMA ORCHESTRATOR ─── -->
+  <rect x="150" y="258" width="600" height="62" rx="8" fill="#2a1a2e" stroke="#bc8cff" stroke-width="2"/>
+  <text x="450" y="280" text-anchor="middle" font-size="10" fill="#bc8cff" letter-spacing="2" font-weight="600">ORCHESTRATION LAYER</text>
+  <text x="450" y="299" text-anchor="middle" font-size="14" font-weight="700" fill="#d2a8ff">MedGemma Orchestrator</text>
+  <text x="450" y="314" text-anchor="middle" font-size="10" fill="#8b949e">Aggregates all modality results · Synthesizes diagnostic report · Clinical reasoning</text>
+
+  <!-- Arrows from orchestrator to models -->
+  <line x1="250" y1="320" x2="140" y2="360" stroke="#bc8cff" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <line x1="320" y1="320" x2="270" y2="360" stroke="#bc8cff" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <line x1="390" y1="320" x2="400" y2="360" stroke="#bc8cff" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <line x1="450" y1="320" x2="530" y2="360" stroke="#bc8cff" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <line x1="550" y1="320" x2="660" y2="360" stroke="#bc8cff" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <line x1="630" y1="320" x2="790" y2="360" stroke="#bc8cff" stroke-width="1.2" stroke-dasharray="4,3"/>
+
+  <!-- ─── SPECIALIST MODELS ─── -->
+  <text x="450" y="352" text-anchor="middle" font-size="10" fill="#8b949e" letter-spacing="2" font-weight="600">SPECIALIST MODEL LAYER</text>
+
+  <!-- Model boxes -->
+  <!-- Cough -->
+  <rect x="30"  y="363" width="125" height="52" rx="6" fill="#161b22" stroke="#f0883e" stroke-width="1.2"/>
+  <text x="92"  y="381" text-anchor="middle" font-size="10" fill="#f0883e" font-weight="600">Cough Analysis</text>
+  <text x="92"  y="395" text-anchor="middle" font-size="9"  fill="#8b949e">HEar Fine-tune</text>
+  <text x="92"  y="408" text-anchor="middle" font-size="9"  fill="#8b949e">TB Probability</text>
+
+  <!-- Chest X-ray -->
+  <rect x="165" y="363" width="125" height="52" rx="6" fill="#161b22" stroke="#f0883e" stroke-width="1.2"/>
+  <text x="227" y="381" text-anchor="middle" font-size="10" fill="#f0883e" font-weight="600">Chest X-ray</text>
+  <text x="227" y="395" text-anchor="middle" font-size="9"  fill="#8b949e">CHRX-MLP</text>
+  <text x="227" y="408" text-anchor="middle" font-size="9"  fill="#8b949e">TB Screening</text>
+
+  <!-- Palm -->
+  <rect x="300" y="363" width="125" height="52" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/>
+  <text x="362" y="381" text-anchor="middle" font-size="10" fill="#58a6ff" font-weight="600">Palm Analysis</text>
+  <text x="362" y="395" text-anchor="middle" font-size="9"  fill="#8b949e">MedSigLIP FT</text>
+  <text x="362" y="408" text-anchor="middle" font-size="9"  fill="#8b949e">Anemia Screen</text>
+
+  <!-- Eye -->
+  <rect x="435" y="363" width="125" height="52" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/>
+  <text x="497" y="381" text-anchor="middle" font-size="10" fill="#58a6ff" font-weight="600">Eye Analysis</text>
+  <text x="497" y="395" text-anchor="middle" font-size="9"  fill="#8b949e">MedGemma FT</text>
+  <text x="497" y="408" text-anchor="middle" font-size="9"  fill="#8b949e">Anemia Screen</text>
+
+  <!-- Nail Anemia -->
+  <rect x="570" y="363" width="125" height="52" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/>
+  <text x="632" y="381" text-anchor="middle" font-size="10" fill="#58a6ff" font-weight="600">Nail Analysis</text>
+  <text x="632" y="395" text-anchor="middle" font-size="9"  fill="#8b949e">MedSigLIP FT</text>
+  <text x="632" y="408" text-anchor="middle" font-size="9"  fill="#8b949e">Anemia Screen</text>
+
+  <!-- RR Monitor -->
+  <rect x="705" y="363" width="125" height="52" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="1.2"/>
+  <text x="767" y="381" text-anchor="middle" font-size="10" fill="#3fb950" font-weight="600">Resp. Rate</text>
+  <text x="767" y="395" text-anchor="middle" font-size="9"  fill="#8b949e">HR-RR Detector</text>
+  <text x="767" y="408" text-anchor="middle" font-size="9"  fill="#8b949e">Webcam-based</text>
+
+  <!-- Arrows up from models back to orchestrator (results) -->
+  <line x1="92"  y1="363" x2="250" y2="322" stroke="#30363d" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="227" y1="363" x2="320" y2="322" stroke="#30363d" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="362" y1="363" x2="390" y2="322" stroke="#30363d" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="497" y1="363" x2="450" y2="322" stroke="#30363d" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="632" y1="363" x2="550" y2="322" stroke="#30363d" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="767" y1="363" x2="630" y2="322" stroke="#30363d" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <!-- Arrow from orchestrator down to report -->
+  <line x1="450" y1="425" x2="450" y2="460" stroke="#d2a8ff" stroke-width="1.5"/>
+  <polygon points="450,463 445,454 455,454" fill="#d2a8ff"/>
+
+  <!-- ─── REPORT OUTPUT ─── -->
+  <rect x="250" y="463" width="400" height="55" rx="8" fill="#1c2029" stroke="#d2a8ff" stroke-width="1.5"/>
+  <text x="450" y="484" text-anchor="middle" font-size="10" fill="#d2a8ff" letter-spacing="2" font-weight="600">OUTPUT LAYER</text>
+  <text x="450" y="502" text-anchor="middle" font-size="13" font-weight="700" fill="#e6edf3">Consolidated Diagnostic Report</text>
+  <text x="450" y="516" text-anchor="middle" font-size="10" fill="#8b949e">Preliminary TB risk · Anemia indicators · Respiratory rate · Recommendations</text>
+
+  <!-- Arrow report to user -->
+  <line x1="450" y1="518" x2="450" y2="548" stroke="#d2a8ff" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="450,551 445,542 455,542" fill="#d2a8ff"/>
+
+  <rect x="330" y="551" width="240" height="28" rx="5" fill="#1f3a5f" stroke="#388bfd" stroke-width="1"/>
+  <text x="450" y="569" text-anchor="middle" font-size="11" fill="#79c0ff">Delivered via Gemini Live Voice Response</text>
+
+  <!-- ─── LEGEND ─── -->
+  <rect x="30" y="594" width="12" height="12" rx="2" fill="#1a2a1a" stroke="#3fb950" stroke-width="1.2"/>
+  <text x="48" y="604" font-size="10" fill="#8b949e">Interaction</text>
+  <rect x="120" y="594" width="12" height="12" rx="2" fill="#2a1a2e" stroke="#bc8cff" stroke-width="1.2"/>
+  <text x="138" y="604" font-size="10" fill="#8b949e">Orchestration</text>
+  <rect x="230" y="594" width="12" height="12" rx="2" fill="#161b22" stroke="#f0883e" stroke-width="1.2"/>
+  <text x="248" y="604" font-size="10" fill="#8b949e">TB Models</text>
+  <rect x="320" y="594" width="12" height="12" rx="2" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/>
+  <text x="338" y="604" font-size="10" fill="#8b949e">Anemia Models</text>
+  <rect x="430" y="594" width="12" height="12" rx="2" fill="#161b22" stroke="#3fb950" stroke-width="1.2"/>
+  <text x="448" y="604" font-size="10" fill="#8b949e">Vitals</text>
+</svg>

@@ -1,0 +1,227 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.pipecat.ai/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Recording Conversation Audio
+
+> Learn how to record and save audio from conversations between users and your bot
+
+## Overview
+
+Recording audio from conversations provides valuable data for analysis, debugging, and quality control. You have two options for how to record with Pipecat:
+
+### Option 1: Record using your transport service provider
+
+Record without writing custom code by using your [transport](/server/services/supported-services#transports) provider's recording capabilities. In addition to saving you development time, some providers offer unique recording capabilities.
+
+<Info>Refer to your service provider's documentation to learn more.</Info>
+
+### Option 2: Create your own recording pipeline
+
+Pipecat's `AudioBufferProcessor` makes it easy to capture high-quality audio recordings of both the user and bot during interactions. Opt for this approach if you want more control over your recording.
+
+This guide focuses on how to recording using the `AudioBufferProcessor`, including high-level guidance for how to set up post-processing jobs for longer recordings.
+
+## How the AudioBufferProcessor Works
+
+The `AudioBufferProcessor` captures audio by:
+
+1. Collecting audio frames from both the user (input) and bot (output)
+2. Emitting events with recorded audio data
+3. Providing options for composite or separate track recordings
+
+<Note>
+  Add the processor to your pipeline after the `transport.output()` to capture
+  both the user audio and the bot audio as it's spoken.
+</Note>
+
+## Audio Recording Options
+
+The `AudioBufferProcessor` offers several configuration options:
+
+* **Composite recording**: Combined audio from both user and bot
+  * `on_audio_data` event handler
+* **Track-level recording**: Separate audio files for user and bot
+  * `on_track_audio_data` event handler
+* **Turn-based recording**: Individual audio clips for each speaking turn
+  * `on_user_turn_audio_data` and `on_bot_turn_audio_data` event handlers
+* **Mono or stereo output**: Single channel mixing or two-channel separation
+  * `num_channels=1` for mono; `num_channels=2` for stereo
+
+## Basic Implementation
+
+### Step 1: Create an Audio Buffer Processor
+
+Initialize the audio buffer processor with your desired configuration:
+
+```python  theme={null}
+from pipecat.processors.audio.audio_buffer_processor import AudioBufferProcessor
+
+# Create audio buffer processor with default settings
+audiobuffer = AudioBufferProcessor(
+    num_channels=1,               # 1 for mono, 2 for stereo (user left, bot right)
+    enable_turn_audio=False,      # Enable per-turn audio recording
+    user_continuous_stream=True,  # User has continuous audio stream
+)
+```
+
+### Step 2: Add to Your Pipeline
+
+Place the processor in your pipeline after all audio-producing components:
+
+```python  theme={null}
+pipeline = Pipeline(
+    [
+        transport.input(),
+        stt,
+        context_aggregator.user(),
+        llm,
+        tts,
+        transport.output(),
+        audiobuffer,          # Add after all audio components
+        context_aggregator.assistant(),
+    ]
+)
+```
+
+### Step 3: Start Recording
+
+Explicitly start recording when needed, typically when a session begins:
+
+```python  theme={null}
+@transport.event_handler("on_client_connected")
+async def on_client_connected(transport, client):
+    logger.info(f"Client connected")
+    # Important: Start recording explicitly
+    await audiobuffer.start_recording()
+    # Continue with session initialization...
+```
+
+<Warning>
+  You must call `start_recording()` explicitly to begin capturing audio. The
+  processor won't record automatically when initialized.
+</Warning>
+
+### Step 4: Handle Audio Data
+
+Register an event handler to process audio data:
+
+```python  theme={null}
+@audiobuffer.event_handler("on_audio_data")
+async def on_audio_data(buffer, audio, sample_rate, num_channels):
+    # Save or process the composite audio
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"recordings/conversation_{timestamp}.wav"
+
+    # Create the WAV file
+    with wave.open(filename, "wb") as wf:
+        wf.setnchannels(num_channels)
+        wf.setsampwidth(2)  # 16-bit audio
+        wf.setframerate(sample_rate)
+        wf.writeframes(audio)
+
+    logger.info(f"Saved recording to {filename}")
+```
+
+<Tip>
+  If recording separate tracks, you can use the `on_track_audio_data` event
+  handler to save user and bot audio separately.
+</Tip>
+
+## Recording Longer Conversations
+
+For conversations that last a few minutes, it may be sufficient to just buffer the audio in memory. However, for longer sessions, storing audio in memory poses two challenges:
+
+1. **Memory Usage**: Long recordings can consume significant memory, leading to potential crashes or performance issues.
+2. **Conversation Loss**: If the application crashes or the connection drops, you may lose all recorded audio.
+
+Instead, use the `buffer_size` parameter to record audio in manageable segments. This allows you to periodically save audio data to disk or upload it to cloud storage, reducing memory usage and ensuring data persistence.
+See an example of how to upload chunked audio to AWS cloud storage [here]().
+
+### Chunked Recording
+
+Set a reasonable `buffer_size` to trigger periodic uploads:
+
+```python  theme={null}
+# 30-second chunks (recommended for most use cases)
+SAMPLE_RATE = 24000
+CHUNK_DURATION = 30  # seconds
+audiobuffer = AudioBufferProcessor(
+    sample_rate=SAMPLE_RATE,
+    buffer_size=SAMPLE_RATE * 2 * CHUNK_DURATION  # 2 bytes per sample (16-bit)
+)
+
+chunk_counter = 0
+
+@audiobuffer.event_handler("on_track_audio_data")
+async def on_chunk_ready(buffer, user_audio, bot_audio, sample_rate, num_channels):
+    global chunk_counter
+
+    # Upload or save individual chunks
+    await upload_audio_chunk(f"user_chunk_{chunk_counter:03d}.wav", user_audio, sample_rate, 1)
+    await upload_audio_chunk(f"bot_chunk_{chunk_counter:03d}.wav", bot_audio, sample_rate, 1)
+
+    chunk_counter += 1
+```
+
+### Multipart Upload Strategy
+
+For cloud storage, use multipart uploads to stream audio chunks. For example AWS cloud storage, use the [s3 multipart upload API](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html).
+
+If you are rolling your own multipart upload code, consider the following:
+
+**Conceptual Approach:**
+
+1. **Initialize multipart upload** when recording starts
+2. **Upload chunks as parts** when buffers fill (every \~30 seconds)
+3. **Complete multipart upload** when recording ends
+4. **Post-process** to create final WAV file(s), concatenate audio chunks
+
+**Benefits:**
+
+* Memory efficient for long sessions
+* Fault tolerant (no data loss if connection drops)
+* Enables real-time processing and analysis
+* Parallel upload of multiple tracks
+
+### \[Optional] Post-Processing Pipeline
+
+If not using a managed multipart upload framework like AWS s3 multipart upload, concatenate audio chunks together to create final audio files.
+This can be done with tools like FFmpeg:
+
+**Concatenating Audio Files:**
+
+```bash  theme={null}
+# Method 1: Simple concatenation (same format)
+ffmpeg -i "concat:chunk_001.wav|chunk_002.wav|chunk_003.wav" -acodec copy final.wav
+
+# Method 2: Using file list (recommended for many chunks)
+# Create filelist.txt with format:
+# file 'chunk_001.wav'
+# file 'chunk_002.wav'
+# ...
+ffmpeg -f concat -safe 0 -i filelist.txt -c copy final_recording.wav
+```
+
+**Automation Considerations:**
+
+* Use sequence numbers in chunk filenames for proper ordering
+* Include metadata (sample rate, channels, duration) with each chunk
+* Implement retry logic for failed uploads
+* Consider using cloud functions/lambdas for automatic post-processing
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Try the Audio Recording Example" icon="code" iconType="duotone" href="https://github.com/pipecat-ai/pipecat/blob/main/examples/foundational/34-audio-recording.py">
+    Explore a complete working example that demonstrates how to record and save
+    both composite and track-level audio with Pipecat.
+  </Card>
+
+  <Card title="AudioBufferProcessor Reference" icon="book" iconType="duotone" href="/server/utilities/audio/audio-buffer-processor">
+    Read the complete API reference documentation for advanced configuration
+    options and event handlers.
+  </Card>
+</CardGroup>
+
+Consider implementing audio recording in your application for quality assurance, training data collection, or creating conversation archives. The recorded audio can be stored locally, uploaded to cloud storage, or processed in real-time for further analysis.
